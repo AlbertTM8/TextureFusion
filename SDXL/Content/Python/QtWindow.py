@@ -16,7 +16,10 @@ import os
 import unreal
 import threading
     
-
+# Main Window Class
+# This class is the main window of the application
+# It contains the tab widget and the instances of the menus
+# It contains the submenus as tabs for creating the GUI
 class MainWindow(QMainWindow):
     def __init__(self, model = None):
         super().__init__()
@@ -38,12 +41,18 @@ class MainWindow(QMainWindow):
         self.tabWidget.addTab(self.secondMenu, "Image Generation")
         # # self.tabWidget.addTab(self.thirdMenu, "Adapters")
         # self.tabWidget.addTab(self.fifthMenu, "Texture Maps")
-          
+
+
+    # Notify function for observer pattern
+    # This function is called when the save location is changed
+    # It updates the file path for the other menus
     def notify(self):
+    
         self.secondMenu.filePath = self.firstMenu.Esavelocationlabel.text()
         self.fourthMenu.filePath = self.firstMenu.Esavelocationlabel.text()
         # self.fifthMenu.filePath = self.firstMenu.Esavelocationlabel.text()
 
+    # Close event for the main window
     def closeEvent(self, event):
         
         QMessageBox.information(self, 'Message', 'Stopping Generation before closing. ')
@@ -88,6 +97,9 @@ class SetupMenu(QWidget):
         layout.addStretch()
         self.load_settings()
 
+    # Load settings function
+    # This function loads the settings from the QSettings object
+    # It loads the saved locations and sets the save location label
     def load_settings(self):
         self.settings = QSettings("Ashill", "SDtoUnreal")
         saved_locations_json = self.settings.value("savedLocations", "[]")
@@ -106,6 +118,9 @@ class SetupMenu(QWidget):
         else:
             self.Esavelocationlabel.setText(allowed_directory)
 
+    # Save settings function
+    # This function saves the settings to the QSettings object
+    # It saves the save location to the saved locations
     def save_settings(self, file_path):
         allowed_directory = unreal.Paths.project_content_dir()
         # unreal.Paths.project_content_dir()
@@ -119,6 +134,9 @@ class SetupMenu(QWidget):
         saved_locations.append(file_path)
         self.settings.setValue("savedLocations", json.dumps(saved_locations))
 
+    # Select file slot function
+    # This function is called when the select file button is clicked    
+    # It opens a file dialog to select the save location
     @Slot()
     def select_file(self):
         allowed_directory = unreal.Paths.project_content_dir()
@@ -147,7 +165,10 @@ class SetupMenu(QWidget):
         for observer in self.observers:
             observer.notify()
 
-
+# Class for the Stable Diffusion Menu
+# This class contains is the Main Menu for the Image Generation
+# It contains all the widgets and layouts for the menu
+# It handles QThread for the image generation
 class StableDiffusionMenu(QWidget):
     def __init__(self, filepath):
         super().__init__()
@@ -345,9 +366,11 @@ class StableDiffusionMenu(QWidget):
         self.runBox.setGraphicsEffect(self. opacity_effect)
         self.layout.addStretch()
 
+
     def create_label_clicked_handler(self, index):
         return lambda: self.label_clicked(index)
     
+    # Load settings function for Schedulers
     def load_settings(self):
         # Read the setting as a list/convert to tuple
         self.settings = QSettings("Ashill", "SDtoUnreal")
@@ -366,6 +389,9 @@ class StableDiffusionMenu(QWidget):
 
 
     @Slot()
+    # Main function for generating the image
+    # This function is called when the generate button is clicked
+    # It sets the settings for the SDXL pipeline and starts the WorkerThread
     def generateClicked(self):
         if not self.seedCheckBox.isChecked():
             self.updateSeed(randint(1, 999999))
@@ -386,6 +412,10 @@ class StableDiffusionMenu(QWidget):
         # Disable button while task is running
         self.generateButton.setEnabled(False)
 
+
+    # Handle result function
+    # This function is called when the image is generated
+    # It sets the image to the label and saves the image
     def handle_result(self, image, i):
         self.images[i] = image
         qimage = ImageQt(image)  # Convert PIL image to QImage
@@ -394,23 +424,27 @@ class StableDiffusionMenu(QWidget):
         self.imageLabels[i % 4].setScaledContents(True)
         self.imageLabels[i % 4].setAlignment(Qt.AlignCenter)
     
+    # Label clicked function
+    # This function is called when the label is clicked
+    # It saves the indexed image to the file path
     def label_clicked(self, index):
         if self.images[index] is not None:
             filepath = save_image(self.images[index], self.filePath, self)
 
 
-
-
+    # Set Scheduler function
     @Slot()
     def setScheduler(self, index):
         self.SDXL.set_scheduler(self.schedulerComboBox.currentText())
-
+    
+    # Set Refiner function
     @Slot()
     def setRefiner(self, state):
         if state:
             self.denoisingFractionLabel.setText(".8")
             self.denoisingFractionSlider.setValue(80)
 
+    # Set Settings function
     def setSettings(self):
         settings = {
             "prompt": self.prompt1LineEdit.toPlainText(),
@@ -428,6 +462,10 @@ class StableDiffusionMenu(QWidget):
         print(settings)
         
         self.SDXL.set_settings(settings)
+
+    # Load Model function
+    # This function is called when the load model button is clicked
+    # It loads the model locally or from Huggingface
     def loadModel(self):
         if not self.runBox.isEnabled():
             self.runBox.setGraphicsEffect(None)
@@ -488,9 +526,12 @@ class StableDiffusionMenu(QWidget):
         self.load_settings()
         self.SDXL.set_scheduler("EulerDiscreteScheduler")
 
-
+    # Update Seed function
     def updateSeed(self, seed):
         self.seedSpinBox.setValue(seed)
+
+    # Model ComboBox Changed function
+    # Checks for Custom Model and shows the input row
     def modelComboBoxChanged(self, index):
         if self.modelComboBox.currentText() == "Custom Model...":
             show_widgets_in_layout(self.modelInputRow)
@@ -498,12 +539,18 @@ class StableDiffusionMenu(QWidget):
         else:
             hide_widgets_in_layout(self.modelInputRow)
             hide_widgets_in_layout(self.refinerInputRow)
+    
+    # Check Width function
     def check_width(self):
         if self.widthSpinBox.value() % 16 != 0:
             self.widthSpinBox.setValue(self.widthSpinBox.value() - (self.widthSpinBox.value() % 16))
+    
+    # Check Height function
     def check_height(self):
         if self.heightSpinBox.value() % 16 != 0:
             self.heightSpinBox.setValue(self.heightSpinBox.value() - self.heightSpinBox.value() % 16)
+
+    # Update Color function for the checkboxes
     def update_color(self, state):
         if state == Qt.Checked:
             self.CPUCheckBox.setStyleSheet("QCheckBox { color: red; }")

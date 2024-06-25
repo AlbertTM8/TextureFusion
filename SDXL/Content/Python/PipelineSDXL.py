@@ -11,6 +11,10 @@ from random import randint
 import re
 # from accelerate import Accelerator
 
+
+# Main Diffusion Pipeline Class
+# This class is responsible for loading the models and generating images
+# Settings for Image Generation are set through QtWindow
 class SDXLPipeline:
     def __init__(self, filepath):
         self.filePath = filepath
@@ -20,7 +24,9 @@ class SDXLPipeline:
         self.refinerPath = os.path.join(self.modelFolderPath, "stable-diffusion-xl-refiner-1.0-6.17.2024")
         self.lightningPath = os.path.join(self.modelFolderPath, "stable-diffusion-lightning-6.17.2024")
 
-
+    # Load model function
+    # This function loads the models based on the settings provided in QtWindow
+    # Called when the user clicks the Load Model button
     def load_models(self, loadSettings):
         self.base = None
         self.refiner = None
@@ -90,6 +96,10 @@ class SDXLPipeline:
                     self.conv_layers.append(module)
                     self.conv_layers_original_paddings.append(module.padding_mode)
 
+    # Generate Image function
+    # This function generates an image based on the settings provided in QtWindow
+    # Called when the user clicks the Generate Image button
+    # Returns the generated image
     def generate_image(self, index):
         self.prompt = self.generateSettings["prompt"].strip()
         
@@ -190,6 +200,7 @@ class SDXLPipeline:
         "DPMSolverSinglestepScheduler": DPMSolverSinglestepScheduler
     }
 
+    # Set Scheduler function
     def set_scheduler(self, scheduler_str):
         if scheduler_str in self.SCHEDULER_CLASSES:
             SchedulerClass = self.SCHEDULER_CLASSES.get(scheduler_str)
@@ -212,7 +223,7 @@ class SDXLPipeline:
                 compatible_schedulers.append(result)
         self.settings.setValue("SchedulersList",list(compatible_schedulers))
 
-
+    # loading qsettings for the UI
     def set_settings(self, settingsDict):
         self.generateSettings = settingsDict
     
