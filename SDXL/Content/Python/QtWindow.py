@@ -1,11 +1,11 @@
 import sys
 import json
+import torch
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QScrollArea, QTabWidget, QGroupBox, QPushButton, QTextEdit, QLineEdit, QVBoxLayout,QHBoxLayout, QWidget, QGraphicsOpacityEffect, QLabel, QVBoxLayout, QWidget, QFileDialog, QComboBox, QSpinBox, QSlider, QCheckBox, QDoubleSpinBox
 from PySide6.QtGui import QPixmap, QFont, QScreen
 from PySide6.QtCore import QSettings, Qt, Slot, QThread
 from random import randint
 from PipelineSDXL import SDXLPipeline
-from QtDeepBump import DeepBump
 from utils_Qt import addFormRow, hide_widgets_in_layout, show_widgets_in_layout, ClickableLabel, save_image
 from QtThread import WorkerThread
 from QtMarigold import MarigoldWindow
@@ -20,7 +20,7 @@ import threading
 class MainWindow(QMainWindow):
     def __init__(self, model = None):
         super().__init__()
-        self.setWindowTitle("Stable Diffusion Material Generator for Unreal")
+        self.setWindowTitle("TextureDiffusion")
 
         self.filepath = unreal.Paths.project_content_dir()
         # QT Window Tab Widget
@@ -30,26 +30,29 @@ class MainWindow(QMainWindow):
         self.firstMenu = SetupMenu()
         self.firstMenu.register_observer(self)
         self.secondMenu = StableDiffusionMenu(self.filepath )
-        # self.thirdMenu = AdapterWindow()
-        self.fourthMenu = DeepBump(self.filepath )
-        self.fifthMenu = MarigoldWindow(self.filepath )
+        # # self.thirdMenu = AdapterWindow()
+        # self.fifthMenu = MarigoldWindow(self.filepath )
 
         # Add tab names
         self.tabWidget.addTab(self.firstMenu, "Save Location")
-        self.tabWidget.addTab(self.secondMenu, "SDXL")
-        # self.tabWidget.addTab(self.thirdMenu, "Adapters")
-        self.tabWidget.addTab(self.fourthMenu, "DeepBump N->H")
-        self.tabWidget.addTab(self.fifthMenu, "Marigold H->N")
+        self.tabWidget.addTab(self.secondMenu, "Image Generation")
+        # # self.tabWidget.addTab(self.thirdMenu, "Adapters")
+        # self.tabWidget.addTab(self.fifthMenu, "Texture Maps")
           
     def notify(self):
         self.secondMenu.filePath = self.firstMenu.Esavelocationlabel.text()
         self.fourthMenu.filePath = self.firstMenu.Esavelocationlabel.text()
-        self.fifthMenu.filePath = self.firstMenu.Esavelocationlabel.text()
+        # self.fifthMenu.filePath = self.firstMenu.Esavelocationlabel.text()
 
     def closeEvent(self, event):
+        
         QMessageBox.information(self, 'Message', 'Stopping Generation before closing. ')
         self.secondMenu.cleanup()
+        torch.cuda.empty_cache()
+        torch.cuda.ipc_collect()
         event.accept()  # Ensure the event is accepted and the window closes
+        super().closeEvent(event)
+        # QApplication.instance().quit() 
 
 
 class SetupMenu(QWidget):
@@ -156,7 +159,7 @@ class StableDiffusionMenu(QWidget):
         QPushButton {
             background-color: #007bff;
             color: white;
-            font-weight: bold;
+            font-weight: bold; 
             padding: 16px;
             border-radius: 5px;
         }
@@ -176,7 +179,7 @@ class StableDiffusionMenu(QWidget):
 
         self.tilingCheckBox = QCheckBox("Tiling")
         self.tilingCheckBox.setChecked(True)
-        self.tilingCheckBox.stateChanged.connect(self.update_color)
+        self.tilingCheckBox.clicked.connect(self.update_color)
         
         self.modelComboBox = QComboBox(self)
         self.modelComboBox.addItem("Stable Diffusion XL")
@@ -193,7 +196,7 @@ class StableDiffusionMenu(QWidget):
         self.refinerLineEdit.setPlaceholderText("Model ID from huggingface.co i.e. /stabilityai/stable-diffusion-xl-refiner")
         
         self.CPUCheckBox = QCheckBox("Enable CPU Offload (for low VRAM)")
-        self.CPUCheckBox.stateChanged.connect(self.update_color)
+        self.CPUCheckBox.clicked.connect(self.update_color)
         # Dropdown menu for Scheduler
         self.schedulerComboBox = QComboBox(self)
         self.schedulerComboBox.currentIndexChanged.connect(self.setScheduler)
@@ -203,7 +206,7 @@ class StableDiffusionMenu(QWidget):
         self.inferenceStepsSpinBox = QSpinBox()
         self.inferenceStepsSpinBox.setMinimum(1)  # Set minimum value
         self.inferenceStepsSpinBox.setSingleStep(1) # Set step size
-        self.inferenceStepsSpinBox.setValue(30)  
+        self.inferenceStepsSpinBox.setValue(40)  
         self.inferenceStepsSpinBoxLabel = QLabel("Inference Steps")
 
         # Create the Denoising Fraction slider
@@ -222,7 +225,7 @@ class StableDiffusionMenu(QWidget):
         self.guidanceScaleSpinBox = QDoubleSpinBox()
         self.guidanceScaleSpinBox.setMinimum(0)  # Set minimum value
         self.guidanceScaleSpinBoxLabel = QLabel("Guidance Scale (CFG)")
-        self.guidanceScaleSpinBox.setValue(5.0)  
+        self.guidanceScaleSpinBox.setValue(7.0)  
 
         # Random Seed Spin Box
         self.seedSpinBox = QSpinBox()
@@ -233,9 +236,9 @@ class StableDiffusionMenu(QWidget):
         self.seedCheckBox = QCheckBox()
         
         self.seedCheckBox.stateChanged.connect(self.seedSpinBox.setEnabled)
-        self.seedCheckBox.stateChanged.connect(self.update_color)
+        self.seedCheckBox.clicked.connect(self.update_color)
 
-        loadWarningLabel = QLabel("First time loading will download the relevant model. SDXL is 6 GB")
+
 
         # Create QLineEdit and QLabel for Prompt1
         self.prompt1Label = QLabel("Prompt1")
@@ -280,7 +283,7 @@ class StableDiffusionMenu(QWidget):
         self.refinerCheckBox.stateChanged.connect(self.setRefiner)
         self.refinerCheckBox.setChecked(False)
         self.refinerCheckBox.stateChanged.connect(self.denoisingFractionSlider.setEnabled)
-        self.refinerCheckBox.stateChanged.connect(self.update_color)
+        self.refinerCheckBox.clicked.connect(self.update_color)
 
         # Labels for displaying the image
         self.imageLabels = [ClickableLabel(self) for _ in range(4)]
@@ -297,7 +300,6 @@ class StableDiffusionMenu(QWidget):
         addFormRow(self.modelLayout,"Model", self.modelComboBox, self.modelLoadButton)
         self.modelInputRow = addFormRow(self.modelLayout, "Base Model", self.modelLineEdit)
         self.refinerInputRow = addFormRow(self.modelLayout, "Refiner Model", self.refinerLineEdit)
-        self.modelLayout.addWidget(loadWarningLabel)
         self.modelLayout.addWidget(self.CPUCheckBox)
         self.layout.addWidget(loadBox)
         hide_widgets_in_layout(self.modelInputRow)
@@ -453,7 +455,7 @@ class StableDiffusionMenu(QWidget):
             self.inferenceStepsSpinBox.setEnabled(True)
             self.inferenceStepsSpinBox.setValue(30)
             show_widgets_in_layout(self.inferenceStepsRow)
-            self.guidanceScaleSpinBox.setValue(5)
+            self.guidanceScaleSpinBox.setValue(7)
             self.guidanceScaleSpinBox.setEnabled(True)
             show_widgets_in_layout(self.guidanceScaleRow)
             self.refinerCheckBox.setEnabled(True)

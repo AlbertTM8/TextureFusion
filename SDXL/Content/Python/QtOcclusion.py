@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QVBoxLayout, QSlider, QFileDialog, QPushButton, QHBoxLayout
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QVBoxLayout, QSlider, QFileDialog, QPushButton, QHBoxLayout, QComboBox, QCheckBox, QSpacerItem, QSizePolicy
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QPixmap, QImage
 import numpy as np
@@ -14,13 +14,15 @@ class OcclusionApp(QMainWindow):
         
     def initUI(self):
         self.setWindowTitle('Occlusion Map Viewer')
-        
+        spacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
         # Main widget
         self.main_widget = QWidget()
         self.setCentralWidget(self.main_widget)
+
         
         # Layouts
         self.layout = QVBoxLayout()
+        self.layout.addItem(spacer)
         self.controls_layout = QHBoxLayout()
         
 

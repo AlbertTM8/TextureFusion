@@ -1,11 +1,10 @@
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QVBoxLayout, QSlider, QFileDialog, QPushButton, QHBoxLayout, QComboBox, QCheckBox
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QVBoxLayout, QSlider, QFileDialog, QPushButton, QHBoxLayout, QComboBox, QCheckBox, QSpacerItem, QSizePolicy
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QPixmap, QImage
 import numpy as np
 from PIL import Image
 import scipy.ndimage
 import sys
-from module_normals_to_height import apply
 
 class NormalMapApp(QMainWindow):
     normalMapUpdated = Signal(np.ndarray)
@@ -15,31 +14,31 @@ class NormalMapApp(QMainWindow):
         
     def initUI(self):
         self.setWindowTitle('Normal Map Generator')
-        
+        spacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
         # Main widget
         self.main_widget = QWidget()
         self.setCentralWidget(self.main_widget)
         
         # Layouts
         self.layout = QVBoxLayout()
+        self.layout.addItem(spacer)
         self.controls_layout = QVBoxLayout()
-        self.filter_layout = QHBoxLayout()
+        # self.filter_layout = QHBoxLayout()
         self.invert_layout = QHBoxLayout()
         self.slider_layout = QHBoxLayout()
         
-        # Filter dropdown
-        self.filter_combo = QComboBox()
-        self.filter_combo.addItem("Sobel")
-        self.filter_combo.addItem("Scharr")
-        self.filter_combo.setCurrentIndex(1)
-        self.filter_combo.currentTextChanged.connect(self.update_normal_map)
-        self.filter_layout.addWidget(QLabel('Filter:'))
-        self.filter_layout.addWidget(self.filter_combo)
+        # # Filter dropdown
+        # self.filter_combo = QComboBox()
+        # self.filter_combo.addItem("Sobel")
+        # self.filter_combo.addItem("Scharr")
+        # self.filter_combo.currentTextChanged.connect(self.update_normal_map)
+        # self.filter_layout.addWidget(QLabel('Filter:'))
+        # self.filter_layout.addWidget(self.filter_combo)
         
-        # Invert checkboxes
-        self.invert_r_checkbox = QCheckBox('Invert R')
-        self.invert_r_checkbox.stateChanged.connect(self.update_normal_map)
-        self.invert_layout.addWidget(self.invert_r_checkbox)
+        # # Invert checkboxes
+        # self.invert_r_checkbox = QCheckBox('Invert R')
+        # self.invert_r_checkbox.stateChanged.connect(self.update_normal_map)
+        # self.invert_layout.addWidget(self.invert_r_checkbox)
         
         self.invert_g_checkbox = QCheckBox('Invert G')
         self.invert_g_checkbox.stateChanged.connect(self.update_normal_map)
@@ -64,7 +63,7 @@ class NormalMapApp(QMainWindow):
     
         
         # Set main layout
-        self.layout.addLayout(self.filter_layout)
+        # self.layout.addLayout(self.filter_layout)
         self.layout.addLayout(self.invert_layout)
         self.layout.addLayout(self.slider_layout)
         self.main_widget.setLayout(self.layout)
@@ -81,33 +80,34 @@ class NormalMapApp(QMainWindow):
     #         self.update_normal_map()
     
     def load_height_map(self, height_map):
-        # image = image.convert('L')
-        # height_map = np.array(image).astype(np.float32) / 255.0
+        print('Loading height map')
         self.height_map = height_map
-        self.update_normal_map()
-        
+        if self.height_map is not None:
+            self.update_normal_map()
     
     def sobel_filter(self, height_map):
+        print('Sobel filter')
         Kx = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]])
         Ky = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]])
         Gx = scipy.ndimage.convolve(height_map, Kx)
         Gy = scipy.ndimage.convolve(height_map, Ky)
         return Gx, Gy
 
-    def scharr_filter(self, height_map):
-        Kx = np.array([[-3, 0, 3], [-10, 0, 10], [-3, 0, 3]])
-        Ky = np.array([[-3, -10, -3], [0, 0, 0], [3, 10, 3]])
-        Gx = scipy.ndimage.convolve(height_map, Kx)
-        Gy = scipy.ndimage.convolve(height_map, Ky)
-        return Gx, Gy
+    # def scharr_filter(self, height_map):
+    #     Kx = np.array([[-3, 0, 3], [-10, 0, 10], [-3, 0, 3]])
+    #     Ky = np.array([[-3, -10, -3], [0, 0, 0], [3, 10, 3]])
+    #     Gx = scipy.ndimage.convolve(height_map, Kx)
+    #     Gy = scipy.ndimage.convolve(height_map, Ky)
+    #     return Gx, Gy
+    
+    def calculate_normal_map(self, height_map, strength=2.5, level=7, invertR=1, invertG=1):
+        print('Calculating normal map')
+        Gx, Gy = self.sobel_filter(height_map)
 
-    def calculate_normal_map(self, height_map, filter_type='sobel', strength=2.5, level=7, invertR=1, invertG=1):
-        if filter_type == 'sobel':
-            Gx, Gy = self.sobel_filter(height_map)
-        else:
-            Gx, Gy = self.scharr_filter(height_map)
 
         dz = 1.0 / strength * (1.0 + 2 ** level)
+        if dz == 0:
+            dz = 1e-5  # Avoid division by zero
 
         normal_map = np.zeros((height_map.shape[0], height_map.shape[1], 3), dtype=np.float32)
         normal_map[..., 0] = -Gx * invertR * 255.0
@@ -115,22 +115,26 @@ class NormalMapApp(QMainWindow):
         normal_map[..., 2] = dz
 
         norm = np.linalg.norm(normal_map, axis=2, keepdims=True)
+        norm[norm == 0] = 1e-5  # Avoid division by zero
+
         normal_map = normal_map / norm
 
         normal_map = (normal_map + 1) / 2 * 255
         normal_map = normal_map.astype(np.uint8)
         return normal_map
+
     
     def update_normal_map(self):
+        print('Updating normal map')
         if self.height_map is None:
             return
-        filter_type = self.filter_combo.currentText().lower()
+        # filter_type = self.filter_combo.currentText().lower()
         strength = self.strength_slider.value() / 10.0
         level = self.level_slider.value()
-        invertR = -1 if self.invert_r_checkbox.isChecked() else 1
+        # invertR = -1 if self.invert_r_checkbox.isChecked() else 1
         invertG = -1 if self.invert_g_checkbox.isChecked() else 1
         
-        self.normal_map = self.calculate_normal_map(self.height_map, filter_type=filter_type, strength=strength, level=level, invertR=invertR, invertG=invertG)
+        self.normal_map = self.calculate_normal_map(self.height_map, strength=strength, level=level, invertG=invertG)
         
 
         self.normalMapUpdated.emit(self.normal_map)

@@ -35,14 +35,20 @@ class SDXLPipeline:
             unet.load_state_dict(load_file(hf_hub_download(repo, ckpt), device="cuda"))
             self.base = DiffusionPipeline.from_pretrained(model_id, unet=unet, torch_dtype=torch.float16, variant="fp16")
 
-        else:
+        elif loadSettings['model'] == "Stable Diffusion XL":
             self.base = DiffusionPipeline.from_pretrained(
                 self.basePath,
                 torch_dtype=torch.float16,
                 use_safetensors=True,
                 variant="fp16",
             )
-            # .to("cuda")
+        else:
+            self.base = DiffusionPipeline.from_pretrained(
+                model_id,
+                torch_dtype=torch.float16,
+                use_safetensors=True,
+                variant="fp16",
+            )
         if loadSettings['refiner'] is not None:
             self.refiner = DiffusionPipeline.from_pretrained(
                 self.refinerPath,
