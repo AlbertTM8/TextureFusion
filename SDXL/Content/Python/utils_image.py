@@ -5,7 +5,16 @@ from PIL.ImageQt import ImageQt
 from PySide6.QtGui import QPixmap, QFont
 from PySide6.QtWidgets import QFileDialog
 
+
+
 def adjust_contrast(image, min_color, max_color, contrast_factor):
+        """ Adjusts the contrast of an image by applying a contrast factor within a specified color range.
+        :param image: The input image.
+        :param min_color: The minimum color value to apply the contrast factor to.
+        :param max_color: The maximum color value to apply the contrast factor to.
+        :param contrast_factor: The factor to adjust the contrast by.
+        :return: The adjusted image.
+        """
         img_array = np.array(image)
 
         # Normalize pixel values
@@ -28,6 +37,13 @@ def adjust_contrast(image, min_color, max_color, contrast_factor):
 
 
 def scale_pixel_range(image, input_min, input_max, output_min, output_max):
+    """ Scales the pixel values of an image to a specified output range.
+    :param image: The input image.
+    :param input_min: The minimum pixel value in the input image.
+    :param input_max: The maximum pixel value in the input image.
+    :param output_min: The minimum pixel value in the output image.
+    :param output_max: The maximum pixel value in the output image.
+    :return: The scaled image."""
     img_array = image.convert("L")  # Convert to grayscale
 
     # Scale pixel values within the specified input range to the output range
@@ -41,11 +57,24 @@ def scale_pixel_range(image, input_min, input_max, output_min, output_max):
 
     return scaled_image
 
+# Invert the colors of an image
+# image: The input image
+# Returns the inverted image
 def invert_image(image):
+     """ Inverts the colors of an image.
+        :param image: The input image.
+        :return: The inverted image.
+        """
+     
      image = ImageOps.invert(image)
      return image
 
+#
 def calculate_normal_map(height_map):
+    """ Calculate the normal map from a height map using the sobel method.
+    :param height_map: The height map image.
+    :return: The normal map image.
+    """
     # Compute gradients in the x and y directions
     sobel_x = cv2.Sobel(height_map, cv2.CV_64F, 1, 0, ksize=3)
     sobel_y = cv2.Sobel(height_map, cv2.CV_64F, 0, 1, ksize=3)
@@ -64,6 +93,11 @@ def calculate_normal_map(height_map):
     return normal_map_normalized
 
 def display_image(image, imageLabel):
+    """ Display an image in a QLabel.
+    :param image: The image to display.
+    :param imageLabel: The QLabel to display the image in.
+    :return: The displayed image.
+    """
     if isinstance(image, np.ndarray):
         image = numpy_to_PIL(image)
     pixmap = QPixmap.fromImage(ImageQt(image))
@@ -74,6 +108,11 @@ def display_image(image, imageLabel):
 
 
 def numpy_to_PIL(numpy_image):
+    """ Convert a numpy array to a PIL Image.
+    :param numpy_image: The input numpy array.
+    :return: The converted PIL Image.
+    """
+
     # Validate the input is at least 2-dimensional
     if numpy_image.ndim < 2:
         raise ValueError("Expected an array with at least 2 dimensions.")
@@ -96,12 +135,14 @@ def numpy_to_PIL(numpy_image):
         raise ValueError("Unsupported array dimensions; expected 2D or 3D array.")
 
 def handle_grayscale(numpy_image):
+    """ Handle grayscale images."""
     # Normalize and convert if necessary
     if numpy_image.dtype == np.float32 or numpy_image.dtype == np.float64:
         numpy_image = (numpy_image * 255).clip(0, 255).astype(np.uint8)
     return Image.fromarray(numpy_image, 'L')
 
 def handle_color(numpy_image, channel_first):
+    """ Handle color images."""
     if channel_first:
         # Convert C, H, W to H, W, C
         numpy_image = np.transpose(numpy_image, (1, 2, 0))
@@ -121,6 +162,7 @@ def handle_color(numpy_image, channel_first):
 
 
 def load_image(file_path, imageLabel):
+    """ Load an image from a file path and display it in a QLabel."""
     image = Image.open(file_path)
     display_image(image, imageLabel)
     return image

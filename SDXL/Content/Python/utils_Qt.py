@@ -7,6 +7,15 @@ from utils_image import numpy_to_PIL
 import numpy as np
 
 def addFormRow(layout, labelText, widget, optionalWidget=None, enabled=True):
+        """
+        Add a row to a form layout with a label and a widget.
+        :param layout: The layout to add the row to.
+        :param labelText: The text of the label.
+        :param widget: The widget to add to the row.
+        :param optionalWidget: An optional additional widget to add to the row.
+        :param enabled: Whether the widget should be enabled.
+        :return: The layout of the row.
+        """
         rowLayout = QHBoxLayout()
         label = QLabel(labelText)
         rowLayout.addWidget(label)
@@ -50,6 +59,13 @@ def save_image(image, filepath, parent=None, title="Save Image"):
             return file_path
 
 def save_images(image_list, name_list, parent):
+    """
+    Opens a file dialog to save multiple images.
+    :param image_list: List of QImage or similar image objects that have a save method.
+    :param name_list: List of names for the images.
+    :param parent: QWidget that will act as the parent of this file dialog.
+    :return: None
+    """
     options = QFileDialog.Options()
     
     if len(image_list) != len(name_list):
@@ -90,6 +106,7 @@ def show_widgets_in_layout(layout):
 
 
 class ClickableLabel(QLabel):
+    """A QLabel that emits a custom signal when clicked."""
     clicked = Signal()  # Define a custom signal
 
     def __init__(self, *args, **kwargs):

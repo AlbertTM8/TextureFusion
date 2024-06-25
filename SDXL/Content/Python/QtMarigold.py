@@ -4,7 +4,6 @@ from PySide6.QtGui import QPixmap, QImage
 from PySide6.QtCore import Qt
 from PIL import Image
 from utils_Qt import addFormRow, upload_image, save_image, save_images
-from utils_image import display_image
 from diffusers import DiffusionPipeline
 from PIL.ImageQt import ImageQt
 from utils_image import calculate_normal_map, load_image, display_image, numpy_to_PIL

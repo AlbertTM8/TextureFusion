@@ -1,6 +1,7 @@
 import numpy as np
 from PIL import Image, ImageOps
 
+
 def adjust_contrast(image, min_color, max_color, contrast_factor):
         img_array = np.array(image)
 
