@@ -1,13 +1,21 @@
-# TextureFusion
+![3 (1)](https://github.com/user-attachments/assets/2c21087b-f8eb-4fd3-aa94-2968ab0482a3)# TextureFusion
 A UE5 plugin for creating seamless textures and texture maps through AI Diffusion models (Stable Diffusion). Includes SDXL and SDXL Lighting by default, with options to load custom models from huggingface.
 
 
 
-# Example Textures:
-![download (8)](https://github.com/AlbertTM8/TextureFusion/assets/115167346/f8542020-cf67-44ba-9727-296c01de3597)
+# Features:
+![2](https://github.com/user-attachments/assets/275c7618-6c0a-4961-968e-cdbb1f2c5854)
+![1](https://github.com/user-attachments/assets/d4613c0b-8e45-4571-b60a-53d1567562c5)
+![8](https://github.com/user-attachments/assets/97977389-72de-49ba-b566-c51aaa15f9bf)
+![5](https://github.com/user-attachments/assets/b9dd634f-e062-464d-af1f-3adadd111705)
 
-# Unreal UI
-![Screenshot 2024-06-25 121341](https://github.com/AlbertTM8/TextureFusion/assets/115167346/8c646cd0-8804-4cd4-94a3-ace346e53f31)
+
+# Unreal PySide6
+![6](https://github.com/user-attachments/assets/3eb2e3ab-b582-4338-90a2-9dbce85b81fc)
+UI
+![5](https://github.com/user-attachments/assets/32e702fb-bb35-44f6-968a-6c9a5f72b8be)
+![7](https://github.com/user-attachments/assets/82cc5010-e179-4a8b-8b08-1fe8e8e30e51)
+
 
 # Demo Video:
 https://www.linkedin.com/posts/albert-tan-mulligan-a59954183_unrealengine-materialgeneration-ai-activity-7203425092784107521-gqRp?utm_source=share&utm_medium=member_desktop
