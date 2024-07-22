@@ -13,7 +13,6 @@ A UE5 plugin for creating seamless textures and texture maps through AI Diffusio
 
 # Unreal PySide6 UI
 ![6](https://github.com/user-attachments/assets/3eb2e3ab-b582-4338-90a2-9dbce85b81fc)
-![5](https://github.com/user-attachments/assets/32e702fb-bb35-44f6-968a-6c9a5f72b8be)
 ![7](https://github.com/user-attachments/assets/82cc5010-e179-4a8b-8b08-1fe8e8e30e51)
 
 
